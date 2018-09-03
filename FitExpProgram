@@ -1,0 +1,59 @@
+import math
+import random
+import time
+import numpy as np
+def ExpData(Amp, Exponent, Size, Noise):
+    """ () -> List
+    Returns handmade data of size specified by Size. Outputs x, y where y is of y = Amp*exp(Exponent*x) + noise. The
+    noise is determined by Noise as additional % error.
+    The function is designed for testing the FitExp function to see if it can accurately get back the values Amp and Exponent.
+    """
+    # Creates lists x, y
+    
+    x = [0 for i in range(Size)] #initializes x
+    x = [i+1 for i in range(Size)] #sets x values from i = 1 to max
+    y = [0 for i in range(Size)] # initializes y
+    y = [Amp*2.71828182845904**(Exponent*x[i]) for i in range(Size)] # sets y values to the required ideal exponential function.
+    error = [0 for i in range(Size)] #initializes error
+    error = [random.randint(-Noise*100, Noise*100)/100 for i in range(Size)] #Calculates % error values for each point in y
+    y = [y[i]*(1+error[i]/100) for i in range(Size)] #updates y values. #Upadtes y values to include Noise. 
+    return x,y
+
+def FitExp(x,y):
+    """ (List, List) -> float1, float2
+    Returns two float numbers Amp and Exponent that correspond to an exponential fit for y = Amp*exp(x*Exponent)
+    """
+    TimeBegin = time.clock()
+    Length = len(x) # total number of datapoints
+    valuesToAverage = int(Length**0.5) # total number of points to use for a reasonable fit.
+    slopes = [0 for i in range(valuesToAverage)] # Initializes slopes at those points to 0.
+    intercepts = [0 for i in range(valuesToAverage)] #  Intitializes predicted intercept values to 0.
+    Xlocations = [int((Length*(i+1))/(valuesToAverage+2)) for i in range(valuesToAverage+1)] 
+    slopes = [(math.log(y[Xlocations[i+1]])-math.log(y[Xlocations[i]]))/(x[Xlocations[i+1]]-x[Xlocations[i]]) for i in range(valuesToAverage)]#slopes are calculted at each point.
+    AverageSlope = np.mean(slopes) # Average of slopes will be a good indication of the exponent value.
+    intercepts = [math.log(y[Xlocations[i]])-AverageSlope*x[Xlocations[i]] for i in range(valuesToAverage-1)]
+    AverageIntercept = np.mean(intercepts) # Average of intercepts 
+    Amp = np.exp(AverageIntercept)
+    Exponent = AverageSlope
+    TimeEnd = time.clock()
+    TimeTaken = TimeEnd - TimeBegin
+
+    print (Length, TimeTaken, Amp, Exponent)
+
+
+    return Amp, Exponent
+    
+def FitExpNp(x,y):
+    """ (List, List) -> float1, float2
+    Returns two float numbers Amp and Exponent that correspond to an exponential fit for y = Amp*exp(x*Exponent)
+    """
+    TimeBegin = time.clock()
+    Exponent, A = np.polyfit(x, np.log(y), 1, rcond=None, full=False, w=None, cov=False)
+    Amp = np.exp(A)
+    TimeEnd = time.clock()
+    TimeTaken = TimeEnd - TimeBegin
+
+    print (len(x), TimeTaken, Amp, Exponent)
+
+
+    return Amp, Exponent
